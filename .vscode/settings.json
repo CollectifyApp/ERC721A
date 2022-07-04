@@ -1,0 +1,5 @@
+{
+  "solidity.defaultCompiler": "localFile",
+  "solidity.compileUsingLocalVersion": "/Users/hging/project/math/ERC721A/soljson-v0.8.15+commit.e14f2714.js",
+  "solidity.compileUsingRemoteVersion": "v0.8.11+commit.d7f03943"
+}

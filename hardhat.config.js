@@ -1,5 +1,6 @@
 require('@nomiclabs/hardhat-waffle');
 require('@nomiclabs/hardhat-ethers');
+require("@nomiclabs/hardhat-etherscan");
 
 if (process.env.REPORT_GAS) {
   require('hardhat-gas-reporter');
@@ -26,6 +27,17 @@ module.exports = {
     currency: 'USD',
     gasPrice: 100,
     showTimeSpent: true,
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  networks: {
+    development: {
+      url: "http://localhost:24012/rpc",
+    },
+    rinkeby: {
+      url: "http://localhost:24012/rpc",
+    },
   },
   plugins: ['solidity-coverage'],
 };
