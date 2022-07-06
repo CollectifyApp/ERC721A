@@ -19,10 +19,16 @@ contract MathLaunchPad is ERC721A, ERC2981, AccessControl {
     bytes32 public constant OWNER_ROLE = keccak256('OWNER_ROLE');
     MintTime public privateMintTime;
     MintTime public publicMintTime;
+    TimeZone public timeZone;
 
     struct MintTime {
         uint64 startAt;
         uint64 endAt;
+    }
+
+    struct TimeZone {
+        uint8 offset;
+        string text;
     }
 
     mapping(address => bool) internal claimList;
@@ -32,14 +38,16 @@ contract MathLaunchPad is ERC721A, ERC2981, AccessControl {
         string memory symbol,
         uint256 _mintPrice,
         uint256 _maxSupply,
-        uint256 _maxCountPerAddress,
+        uint8 _maxCountPerAddress,
         string memory _uri,
-        uint96 royaltyFraction
+        uint96 royaltyFraction,
+        TimeZone memory _timezone
     ) ERC721A(name, symbol) {
         mintPrice = _mintPrice;
         maxSupply = _maxSupply;
         maxCountPerAddress = _maxCountPerAddress;
         baseURI = _uri;
+        timeZone = _timezone;
         _setDefaultRoyalty(_msgSender(), royaltyFraction);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(OWNER_ROLE, _msgSender());
@@ -70,7 +78,7 @@ contract MathLaunchPad is ERC721A, ERC2981, AccessControl {
         maxSupply = _maxSupply;
     }
 
-    function changemaxPerAddress(uint256 _maxPerAddress) public onlyOwner {
+    function changemaxPerAddress(uint8 _maxPerAddress) public onlyOwner {
         maxCountPerAddress = _maxPerAddress;
     }
 

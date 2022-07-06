@@ -90,6 +90,12 @@ const createTestSuite = ({ contract, constructorArgs }) =>
           expect(await this.mathlaunchpad.merkleRoot()).to.be.equal('0x0000000000000000000000000000000000000000000000000000000000000000');
         })
 
+        it('timeZone should be setted', async function () {
+          timezone = await this.mathlaunchpad.timeZone();
+          expect(timezone[0]).to.be.equal(constructorArgs[7][0]);
+          expect(timezone[1]).to.be.equal(constructorArgs[7][1]);
+        })
+
       })
 
       context('with no minted tokens', async function () {
@@ -724,7 +730,7 @@ const createTestSuite = ({ contract, constructorArgs }) =>
 
 
 // describe('ERC721A', createTestSuite({ contract: 'ERC721AMock', constructorArgs: ['Azuki', 'AZUKI'] }));
-describe('MathLaunchPad', createTestSuite({ contract: 'MathLaunchPad', constructorArgs: ['MathLaunchPad', 'Math', utils.parseEther('0.1'), 100, 2, '', 200] }));
+describe('MathLaunchPad', createTestSuite({ contract: 'MathLaunchPad', constructorArgs: ['MathLaunchPad', 'Math', utils.parseEther('0.1'), 100, 2, '', 200, [0, 'TEST']] }));
 
 // describe(
 //   'ERC721A override _startTokenId()',
