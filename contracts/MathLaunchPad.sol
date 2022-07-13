@@ -31,7 +31,8 @@ contract MathLaunchPad is ERC721A, ERC2981, AccessControl {
         string text;
     }
 
-    mapping(address => bool) internal claimList;
+    mapping(address => bool) internal privateClaimList;
+    mapping(address => bool) internal publicClaimList;
 
     constructor(
         string memory name,
@@ -105,32 +106,32 @@ contract MathLaunchPad is ERC721A, ERC2981, AccessControl {
         _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    function privateMint(uint256 quantity, bytes32[] calldata merkleProof) external payable {
-        require(block.timestamp > privateMintTime.startAt && block.timestamp < privateMintTime.endAt, "error: 10000 time is not allowed");
+    function privateMint(uint256 quantity, uint256 whiteQuantity, bytes32[] calldata merkleProof) external payable {
+        require(block.timestamp >= privateMintTime.startAt && block.timestamp <= privateMintTime.endAt, "error: 10000 time is not allowed");
         uint256 supply = totalSupply();
         require(supply + quantity <= maxSupply, "error: 10001 supply exceeded");
         require(mintPrice * quantity <= msg.value, "error: 10002 price insufficient");
         address claimAddress = _msgSender();
-        require(!claimList[claimAddress], 'error:10003 already claimed');
+        require(!privateClaimList[claimAddress], 'error:10003 already claimed');
         require(
-            MerkleProof.verify(merkleProof, merkleRoot, keccak256(abi.encodePacked(claimAddress, quantity))),
+            MerkleProof.verify(merkleProof, merkleRoot, keccak256(abi.encodePacked(claimAddress, whiteQuantity))),
             'error:10004 not in the whitelist'
         );
         _safeMint(claimAddress, quantity);
-        claimList[claimAddress] = true;
+        privateClaimList[claimAddress] = true;
         _privateMintCount = _privateMintCount + quantity;
     }
 
     function publicMint(uint256 quantity) external payable {
-        require(block.timestamp > publicMintTime.startAt && block.timestamp < publicMintTime.endAt, "error: 10000 time is not allowed");
+        require(block.timestamp >= publicMintTime.startAt && block.timestamp <= publicMintTime.endAt, "error: 10000 time is not allowed");
         require(quantity <= maxCountPerAddress, "error: 10004 max per address exceeded");
         uint256 supply = totalSupply();
         require(supply + quantity <= maxSupply, "error: 10001 supply exceeded");
         require(mintPrice * quantity <= msg.value, "error: 10002 price insufficient");
         address claimAddress = _msgSender();
-        require(!claimList[claimAddress], 'error:10003 already claimed');
+        require(!publicClaimList[claimAddress], 'error:10003 already claimed');
         _safeMint(claimAddress, quantity);
-        claimList[claimAddress] = true;
+        publicClaimList[claimAddress] = true;
     }
 
     function supportsInterface(bytes4 interfaceId)
