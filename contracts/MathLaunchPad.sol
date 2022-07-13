@@ -42,13 +42,17 @@ contract MathLaunchPad is ERC721A, ERC2981, AccessControl {
         uint8 _maxCountPerAddress,
         string memory _uri,
         uint96 royaltyFraction,
-        TimeZone memory _timezone
+        TimeZone memory _timezone,
+        MintTime memory _privateMintTime,
+        MintTime memory _publicMintTime
     ) ERC721A(name, symbol) {
         mintPrice = _mintPrice;
         maxSupply = _maxSupply;
         maxCountPerAddress = _maxCountPerAddress;
         baseURI = _uri;
         timeZone = _timezone;
+        privateMintTime = _privateMintTime;
+        publicMintTime = _publicMintTime;
         _setDefaultRoyalty(_msgSender(), royaltyFraction);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(OWNER_ROLE, _msgSender());
