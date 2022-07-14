@@ -31,6 +31,11 @@ contract MathLaunchPad is ERC721A, ERC2981, AccessControl {
         string text;
     }
 
+    struct MintState {
+        bool privateMinted;
+        bool publicMinted;
+    }
+
     mapping(address => bool) internal privateClaimList;
     mapping(address => bool) internal publicClaimList;
 
@@ -65,6 +70,15 @@ contract MathLaunchPad is ERC721A, ERC2981, AccessControl {
 
     function  _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
+    }
+
+    function isMinted(address owner) public view returns (MintState memory) {
+        return(
+            MintState(
+                privateClaimList[owner],
+                publicClaimList[owner]
+            )
+        );
     }
 
     function changeBaseURI(string memory _uri) public onlyOwner {
