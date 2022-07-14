@@ -103,6 +103,11 @@ contract MathLaunchPad is ERC721A, ERC2981, AccessControl {
         publicMintTime = _mintTime;
     }
 
+    function changeMintTime(MintTime memory _publicMintTime, MintTime memory _privateMintTime) public onlyOwner {
+        privateMintTime = _privateMintTime;
+        publicMintTime = _publicMintTime;
+    }
+
 
     function moveMemberShip(address _newOwner) public {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()));
@@ -156,7 +161,7 @@ contract MathLaunchPad is ERC721A, ERC2981, AccessControl {
             AccessControl.supportsInterface(interfaceId);
     }
 
-    // This allows the devs to receive kind donations
+    // This allows the contract owner to withdraw the funds from the contract.
     function withdraw(uint amt) external onlyOwner {
         (bool sent, ) = payable(_msgSender()).call{value: amt}("");
         require(sent, "GG: Failed to withdraw Ether");
