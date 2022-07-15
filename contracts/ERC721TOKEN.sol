@@ -9,7 +9,7 @@ import '@openzeppelin/contracts/token/common/ERC2981.sol';
 import '@openzeppelin/contracts/utils/cryptography/MerkleProof.sol';
 import '@openzeppelin/contracts/access/AccessControl.sol';
 
-contract MathLaunchPad is ERC721A, ERC2981, AccessControl {
+contract ERC721TOKEN is ERC721A, ERC2981, AccessControl {
     bytes32 public merkleRoot;
     uint256 public maxSupply;
     uint256 public mintPrice;
