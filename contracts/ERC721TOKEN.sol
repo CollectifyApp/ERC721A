@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// MathLaunchPad Contracts v1.0.0
+// Collectify Launchapad Contracts v1.1.0
 // Creator: Hging
 
 pragma solidity ^0.8.4;
@@ -135,10 +135,11 @@ contract ERC721TOKEN is ERC721A, ERC2981, AccessControl {
         require(supply + quantity <= maxSupply, "error: 10001 supply exceeded");
         require(mintPrice * quantity <= msg.value, "error: 10002 price insufficient");
         address claimAddress = _msgSender();
-        require(!privateClaimList[claimAddress], 'error:10003 already claimed');
+        require(!privateClaimList[claimAddress], "error:10003 already claimed");
+        require(quantity <= whiteQuantity, "error: 10004 quantity is not allowed");
         require(
             MerkleProof.verify(merkleProof, merkleRoot, keccak256(abi.encodePacked(claimAddress, whiteQuantity))),
-            'error:10004 not in the whitelist'
+            "error:10004 not in the whitelist"
         );
         _safeMint(claimAddress, quantity);
         privateClaimList[claimAddress] = true;
@@ -152,7 +153,7 @@ contract ERC721TOKEN is ERC721A, ERC2981, AccessControl {
         require(supply + quantity <= maxSupply, "error: 10001 supply exceeded");
         require(mintPrice * quantity <= msg.value, "error: 10002 price insufficient");
         address claimAddress = _msgSender();
-        require(!publicClaimList[claimAddress], 'error:10003 already claimed');
+        require(!publicClaimList[claimAddress], "error:10003 already claimed");
         _safeMint(claimAddress, quantity);
         publicClaimList[claimAddress] = true;
     }
