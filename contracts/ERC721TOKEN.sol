@@ -27,7 +27,7 @@ contract ERC721TOKEN is ERC721A, ERC2981, AccessControl {
     }
 
     struct TimeZone {
-        uint8 offset;
+        int8 offset;
         string text;
     }
 
