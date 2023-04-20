@@ -349,7 +349,7 @@ contract ERC721A is IERC721A {
     /**
      * @dev See {IERC721-approve}.
      */
-    function approve(address to, uint256 tokenId) public override {
+    function approve(address to, uint256 tokenId) public virtual override {
         address owner = ownerOf(tokenId);
 
         if (_msgSenderERC721A() != owner)
