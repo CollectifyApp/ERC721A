@@ -7,22 +7,30 @@ pragma solidity ^0.8.4;
 import './ERC721A.sol';
 import '@openzeppelin/contracts/token/common/ERC2981.sol';
 import '@openzeppelin/contracts/utils/cryptography/MerkleProof.sol';
-import '@openzeppelin/contracts/access/AccessControl.sol';
+// import '@openzeppelin/contracts/access/AccessControl.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
-contract ERC721TOKEN is ERC721A, ERC2981, AccessControl {
+
+contract ERC721TOKEN is ERC721A, ERC2981, Ownable {
     MerkleRoot public merkleRoot;
     uint256 public maxSupply;
     MintPrice public mintPrice;
     uint256 public maxCountPerAddress;
     MintCount public mintCount;
     string public baseURI;
-    bytes32 public constant OWNER_ROLE = keccak256('OWNER_ROLE');
+    // bytes32 public constant OWNER_ROLE = keccak256('OWNER_ROLE');
     MintTime public privateMintTime;
     MintTime public luckyMintTime;
     MintTime public publicMintTime;
     TimeZone public timeZone;
     address public tokenContract;
     address[] private _operatorFilterAddresses;
+    Fee[] private fees;
+
+    struct Fee {
+        address destination;
+        uint256 payableercent;
+    }
 
     struct MintTime {
         uint64 startAt;
@@ -74,6 +82,7 @@ contract ERC721TOKEN is ERC721A, ERC2981, AccessControl {
         uint8 _maxCountPerAddress,
         string memory _uri,
         uint96 royaltyFraction,
+        Fee[] memory _fees,
         TimeZone memory _timezone,
         MintTimeStruct memory mintTime,
         address _tokenContract
@@ -87,14 +96,21 @@ contract ERC721TOKEN is ERC721A, ERC2981, AccessControl {
         luckyMintTime = mintTime.luckyMintTime;
         publicMintTime = mintTime.publicMintTime;
         tokenContract = _tokenContract;
+        for (uint256 i = 0; i < _fees.length; i++) {
+            fees.push(_fees[i]);
+        }
         _setDefaultRoyalty(_msgSender(), royaltyFraction);
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(OWNER_ROLE, _msgSender());
     }
 
-    modifier onlyOwner() {
-        require(hasRole(OWNER_ROLE, _msgSender()), 'error: 20000 - only owner can call this function');
-        _;
+    function feeInfo() public view returns (Fee[] memory) {
+        uint256 ownerFee = 10000;
+        Fee[] memory _fees = new Fee[](fees.length + 1);
+        for (uint256 i = 0; i < fees.length; i++) {
+            ownerFee = ownerFee - fees[i].payableercent;
+            _fees[i] = fees[i];
+        }
+        _fees[fees.length] = Fee(owner(), ownerFee);
+        return _fees;
     }
 
     modifier onlyAllowedOperatorApproval(address operator) {
@@ -187,12 +203,6 @@ contract ERC721TOKEN is ERC721A, ERC2981, AccessControl {
         privateMintTime = _privateMintTime;
         luckyMintTime = _luckyMintTime;
         publicMintTime = _publicMintTime;
-    }
-
-    function moveMemberShip(address _newOwner) public {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()));
-        _grantRole(DEFAULT_ADMIN_ROLE, _newOwner);
-        _revokeRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     function changeOperatorFilterAddresses(address[] memory _addresses) public onlyOwner {
@@ -309,7 +319,7 @@ contract ERC721TOKEN is ERC721A, ERC2981, AccessControl {
         public
         view
         virtual
-        override(ERC721A, ERC2981, AccessControl)
+        override(ERC721A, ERC2981)
         returns (bool)
     {
         // Supports the following `interfaceId`s:
@@ -319,8 +329,7 @@ contract ERC721TOKEN is ERC721A, ERC2981, AccessControl {
         // - IERC2981: 0x2a55205a
         return
             ERC721A.supportsInterface(interfaceId) ||
-            ERC2981.supportsInterface(interfaceId) ||
-            AccessControl.supportsInterface(interfaceId);
+            ERC2981.supportsInterface(interfaceId);
     }
 
     function setApprovalForAll(address operator, bool approved) public override(ERC721A) onlyAllowedOperatorApproval(operator) {
@@ -349,15 +358,24 @@ contract ERC721TOKEN is ERC721A, ERC2981, AccessControl {
 
     // This allows the contract owner to withdraw the funds from the contract.
     function withdraw(uint amt) external onlyOwner {
+        Fee[] memory feeInfos = feeInfo();
         if (tokenContract == address(0)) {
-            (bool sent, ) = payable(_msgSender()).call{value: amt}("");
-            require(sent, "GG: Failed to withdraw Ether");
+            require(amt <= address(this).balance, "GG: Insufficient balance");
+            for(uint256 i = 0; i < feeInfos.length; i++) {
+                (bool sent, ) = payable(feeInfos[i].destination).call{value: amt * feeInfos[i].payableercent / 10000}("");
+                require(sent, "GG: Failed to withdraw Ether");
+            }
         } else {
-            (bool success, bytes memory data) = tokenContract.call(abi.encodeWithSelector(0xa9059cbb, _msgSender(), amt));
-            require(
-                success && (data.length == 0 || abi.decode(data, (bool))),
-                "GG: Failed to withdraw Ether"
-            );
+            (, bytes memory balance) = tokenContract.call(abi.encodeWithSelector(0x70a08231, address(this)));
+            
+            require(amt <= abi.decode(balance, (uint256)), "GG: Insufficient balance");
+            for(uint256 i = 0; i < feeInfos.length; i++) {
+                (bool success, bytes memory data) = tokenContract.call(abi.encodeWithSelector(0xa9059cbb, feeInfos[i].destination, amt * fees[i].payableercent / 10000));
+                require(
+                    success && (data.length == 0 || abi.decode(data, (bool))),
+                    "GG: Failed to withdraw Ether"
+                );
+            }
         }
     }
 }
